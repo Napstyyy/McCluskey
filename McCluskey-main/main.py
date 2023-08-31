@@ -101,10 +101,7 @@ def main():
 
 
     essential_Prime_Implicants_List = findEPI(chart)  # Finding essential prime implicants
-    print("\nEssential Prime Implicants: " + ', '.join(str(i) for i in essential_Prime_Implicants_List))                                                                          #dictionary
-
-    input("\nPress enter to continue...")
-
+    #print("\nEssential Prime Implicants: " + ', '.join(str(i) for i in essential_Prime_Implicants_List))                                                                          #dictionary
 
     removeTerms(chart, essential_Prime_Implicants_List)  # Remove EPI related columns from chart 
 
@@ -119,21 +116,15 @@ def main():
         listOfMostCommonValues = most_common_values(chart)
         MostCommonValue = listOfMostCommonValues[0][0]
         implicantToRemoveFromChart = MostCommonValue
-
-        mergedMintermsToRemove = findminterms(implicantToRemoveFromChart)
         ListOfImplicantToRemove = [implicantToRemoveFromChart]
         removeTerms(chart, ListOfImplicantToRemove) 
-        input(f"Implicant removed: {implicantToRemoveFromChart}\n merged minterms removed: {mergedMintermsToRemove}\n")
-
         essential_Prime_Implicants_List.append(implicantToRemoveFromChart)
 
 
     if len(chart) == 0:  # If no minterms remain after removing EPI related columns
-        print("Estoy aqui chavito")
         final_result = [findVariables(i) for i in essential_Prime_Implicants_List]  # Final result with only ESSENTIAL PRIME IMPLICANTS
 
     else:  # Else follow Petrick's method for further simplification
-        print("Estoy metido en otro laoh")
         P = [[findVariables(j) for j in chart[i]] for i in chart]
         while len(P) > 1:  # Keep multiplying until we get the SOP form of P
             P[1] = multiply(P[0], P[1])
@@ -141,8 +132,6 @@ def main():
         final_result = [min(P[0], key=len)]  # Choosing the term with minimum variables from P
         final_result.extend(findVariables(i) for i in essential_Prime_Implicants_List)  # Adding the EPIs to the final solution
 
-
-    print("final_result:", final_result, "and its type is", type(final_result))
     
     if len(final_result) == 1:  # If no minterms remain after removing EPI related columns
         if len(final_result[0]) == 0:
