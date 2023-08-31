@@ -1,3 +1,4 @@
+from collections import Counter
 from refine import refine
 from findVariables import findVariables
 from flatten import flatten
@@ -72,57 +73,84 @@ def main():
     # -------------------------- Printing and processing of Prime Implicant chart. START ------------------------------------------------------------------#
     
     chart = {}
-    def printChart(chart, PrimeImplicantsList, mintermsList, dc, sz):
-        sz = len(str(mintermsList[-1]))  # The number of digits of the largest minterm
-        print('\n\n\nPrime Implicants chart:\n\n    Minterms    |%s\n%s' % (
-            ' '.join((' ' * (sz - len(str(i)))) + str(i) for i in mintermsList), '=' * (len(mintermsList) * (sz + 1) + 16)))
-        
-        
-        for primeImplicant in PrimeImplicantsList:
-            merged_minterms_List= findminterms(primeImplicant)
-            y=0
-            print("%-16s|" % ','.join(merged_minterms_List), end='')
-            for j in refine(merged_minterms_List, dc):
-                x = mintermsList.index(int(j)) * (sz + 1)  # The position where we should put 'X'
-                print(' ' * abs(x - y) + ' ' * (sz - 1) + 'X', end='')
-                y = x + sz
-                try:
-                    chart[j].append(primeImplicant) if primeImplicant not in chart[j] else None  # Add minterm in chart
-                except KeyError:
-                    chart[j] = [primeImplicant]
-            print('\n' + '-' * (len(mintermsList) * (sz + 1) + 16))
+    merged_minterms_List = []
 
-    printChart(chart, All_Prime_Implicants_List, mt, dc, size)
+    sz = len(str(mt[-1]))  # The number of digits of the largest minterm
+    print('\n\n\nPrime Implicants chart:\n\n    Minterms    |%s\n%s' % (
+        ' '.join((' ' * (sz - len(str(i)))) + str(i) for i in mt), '=' * (len(mt) * (sz + 1) + 16)))
+    
+    
+    for primeImplicant in All_Prime_Implicants_List:
+        merged_minterm= findminterms(primeImplicant)
+        y=0
+        print("%-16s|" % ','.join(merged_minterm), end='')
+        for j in refine(merged_minterm, dc):
+            x = mt.index(int(j)) * (sz + 1)  # The position where we should put 'X'
+            print(' ' * abs(x - y) + ' ' * (sz - 1) + 'X', end='')
+            y = x + sz
+            try:
+                chart[j].append(primeImplicant) if primeImplicant not in chart[j] else None  # Add minterm in chart
+            except KeyError:
+                chart[j] = [primeImplicant]
+        print('\n' + '-' * (len(mt) * (sz + 1) + 16))
+
+        merged_minterms_List.append(merged_minterm)
+
+
     # -------------------------- Printing and processing of Prime Implicant chart. END ------------------------------------------------------------------#
 
 
     essential_Prime_Implicants_List = findEPI(chart)  # Finding essential prime implicants
-    print("\nEssential Prime Implicants: " + ', '.join(str(i) for i in essential_Prime_Implicants_List))
-
-    #print("merged_minterms:", merged_minterms_List, "and its type is", type(merged_minterms_List))                                                 #list
-    #print("ALL PRIME IMPLICANTS:", All_Prime_Implicants_List, "an their type is", type(All_Prime_Implicants_List))                                 #set
-    #print(f"Essential Prime Implicants: {essential_Prime_Implicants_List} and their type is {type(essential_Prime_Implicants_List)}")    #LIST                   
-    #print(f"Chart: {chart} and its type is {type(chart)}")                                                                              #dictionary
+    print("\nEssential Prime Implicants: " + ', '.join(str(i) for i in essential_Prime_Implicants_List))                                                                          #dictionary
 
     input("\nPress enter to continue...")
 
-    removeTerms(chart, essential_Prime_Implicants_List)  # Remove EPI related columns from chart <---------------------------------------------------------------------------------------
 
-    printChart(chart, All_Prime_Implicants_List, mt, dc, size)# Print the chart after removing EPI related columns
+    removeTerms(chart, essential_Prime_Implicants_List)  # Remove EPI related columns from chart 
 
-    input("\nPress enter to continue...")
+
+    def most_common_values(dictionary):
+        all_values = [value for values_list in dictionary.values() for value in values_list] # Get all values from dictionary
+        value_counts = Counter(all_values)                                                  # Calculate the frequency of each value
+        most_common = value_counts.most_common()                                            # Get the most common values
+        return most_common
+    
+    while len(chart) > 0:
+        listOfMostCommonValues = most_common_values(chart)
+        MostCommonValue = listOfMostCommonValues[0][0]
+        implicantToRemoveFromChart = MostCommonValue
+
+        mergedMintermsToRemove = findminterms(implicantToRemoveFromChart)
+        ListOfImplicantToRemove = [implicantToRemoveFromChart]
+        removeTerms(chart, ListOfImplicantToRemove) 
+        input(f"Implicant removed: {implicantToRemoveFromChart}\n merged minterms removed: {mergedMintermsToRemove}\n")
+
+        essential_Prime_Implicants_List.append(implicantToRemoveFromChart)
 
 
     if len(chart) == 0:  # If no minterms remain after removing EPI related columns
+        print("Estoy aqui chavito")
         final_result = [findVariables(i) for i in essential_Prime_Implicants_List]  # Final result with only ESSENTIAL PRIME IMPLICANTS
+
     else:  # Else follow Petrick's method for further simplification
+        print("Estoy metido en otro laoh")
         P = [[findVariables(j) for j in chart[i]] for i in chart]
         while len(P) > 1:  # Keep multiplying until we get the SOP form of P
             P[1] = multiply(P[0], P[1])
             P.pop(0)
         final_result = [min(P[0], key=len)]  # Choosing the term with minimum variables from P
         final_result.extend(findVariables(i) for i in essential_Prime_Implicants_List)  # Adding the EPIs to the final solution
-    print('\n\nSolution: F = ' + ' + '.join(''.join(i) for i in final_result))
+
+
+    print("final_result:", final_result, "and its type is", type(final_result))
+    
+    if len(final_result) == 1:  # If no minterms remain after removing EPI related columns
+        if len(final_result[0]) == 0:
+            print("\n\nSolution: F = 1")
+        else:
+            print('\n\nSolution: F = ' + ' + '.join(''.join(i) for i in final_result[0]))
+    else:
+        print('\n\nSolution: F = ' + ' + '.join(''.join(i) for i in final_result))
 
     input("\nPress enter to exit...")
 

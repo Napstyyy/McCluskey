@@ -6,10 +6,3 @@ def findEPI(dictionary):
             EsentialPrimeImplicant = dictionary[i][0] #The essential prime implicant is the only element in the list
             List.append(EsentialPrimeImplicant) if EsentialPrimeImplicant not in List else None #Add the essential prime implicant to the list if it is not already in the list
     return List
-
-
-
-
-
-
-
