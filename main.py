@@ -99,7 +99,7 @@ def main():
                 chart[j] = [i]
         print('\n' + '-' * (len(mt) * (sz + 1) + 16))
 
-    # -------------------------- Printing and processing of Prime Implicant chart. END ------------------------------------------------------------------#
+    # -------------------------- Printing and processing of Prime Implicant chart. END ------------------------------------------------------------------# 
 
 
     essentialPrimeImplicantsList = findEPI(chart)  # Finding essential prime implicants
