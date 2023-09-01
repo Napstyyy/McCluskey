@@ -6,8 +6,11 @@ from compare import compare
 from removeTerms import removeTerms
 from findEPI import findEPI
 from multiply import multiply
+from collections import Counter
 import tkinter
 import customtkinter
+
+
 from PIL import ImageTk, Image
 
 def update_solution_label(new_solution):
@@ -22,7 +25,7 @@ def main():
     minterms = mt
     minterms.sort()
     size = len(bin(minterms[-1])) - 2
-    groups, all_pi = {}, set()
+    groups, All_Prime_Implicants_List = {}, set()
 
     # Primary grouping starts
     for minterm in minterms:
@@ -61,11 +64,11 @@ def main():
                         marked.add(k)  # Mark element k
             m += 1
         local_unmarked = set(flatten(tmp)).difference(marked)  # Unmarked elements of each table
-        all_pi = all_pi.union(local_unmarked)  # Adding Prime Implicants to global list
+        All_Prime_Implicants_List = All_Prime_Implicants_List.union(local_unmarked)  # Adding Prime Implicants to global list
         print("Unmarked elements (Prime Implicants) of this table:",
               None if len(local_unmarked) == 0 else ', '.join(local_unmarked))  # Printing Prime Implicants of current table
         if should_stop:  # If the minterms cannot be combined further
-            print("\n\nAll Prime Implicants: ", None if len(all_pi) == 0 else ', '.join(all_pi))  # Print all prime implicants
+            print("\n\nAll Prime Implicants: ", None if len(All_Prime_Implicants_List) == 0 else ', '.join(All_Prime_Implicants_List))  # Print all prime implicants
             break
         # Printing of all the next groups starts
         print("\n\n\n\nGroup No.\tMinterms\tBinary of Minterms\n%s" % ('=' * 50))
@@ -77,12 +80,13 @@ def main():
         # Printing of all the next groups ends
     # Process for creating tables and finding prime implicants ends
 
-    # Printing and processing of Prime Implicant chart starts
+    # -------------------------- Printing and processing of Prime Implicant chart. START ------------------------------------------------------------------#
     sz = len(str(mt[-1]))  # The number of digits of the largest minterm
     chart = {}
+    merged_minterms_List = []
     print('\n\n\nPrime Implicants chart:\n\n    Minterms    |%s\n%s' % (
         ' '.join((' ' * (sz - len(str(i)))) + str(i) for i in mt), '=' * (len(mt) * (sz + 1) + 16)))
-    for i in all_pi:
+    for i in All_Prime_Implicants_List:
         merged_minterms, y = findminterms(i), 0
         print("%-16s|" % ','.join(merged_minterms), end='')
         for j in refine(merged_minterms, dc):
@@ -94,22 +98,53 @@ def main():
             except KeyError:
                 chart[j] = [i]
         print('\n' + '-' * (len(mt) * (sz + 1) + 16))
-    # Printing and processing of Prime Implicant chart ends
 
-    EPI = findEPI(chart)  # Finding essential prime implicants
-    print("\nEssential Prime Implicants: " + ', '.join(str(i) for i in EPI))
-    removeTerms(chart, EPI)  # Remove EPI related columns from chart
+    # -------------------------- Printing and processing of Prime Implicant chart. END ------------------------------------------------------------------#
+
+
+    essentialPrimeImplicantsList = findEPI(chart)  # Finding essential prime implicants
+    removeTerms(chart, essentialPrimeImplicantsList)  # Remove EPI related columns from chart
+
+
+    def most_common_values(dictionary):
+            all_values = [value for values_list in dictionary.values() for value in values_list] # Get all values from dictionary
+            value_counts = Counter(all_values)                                                  # Calculate the frequency of each value
+            most_common = value_counts.most_common()                                            # Get the most common values
+            return most_common
+
+
+    while len(chart) > 0:
+        listOfMostCommonValues = most_common_values(chart)
+        MostCommonValue = listOfMostCommonValues[0][0]
+        implicantToRemoveFromChart = MostCommonValue
+        ListOfImplicantToRemove = [implicantToRemoveFromChart]
+        removeTerms(chart, ListOfImplicantToRemove) 
+        essentialPrimeImplicantsList.append(implicantToRemoveFromChart)
+
 
     if len(chart) == 0:  # If no minterms remain after removing EPI related columns
-        final_result = [findVariables(i) for i in EPI]  # Final result with only EPIs
+        final_result = [findVariables(i) for i in essentialPrimeImplicantsList]  # Final result with only EPIs
+
     else:  # Else follow Petrick's method for further simplification
         P = [[findVariables(j) for j in chart[i]] for i in chart]
         while len(P) > 1:  # Keep multiplying until we get the SOP form of P
             P[1] = multiply(P[0], P[1])
             P.pop(0)
         final_result = [min(P[0], key=len)]  # Choosing the term with minimum variables from P
-        final_result.extend(findVariables(i) for i in EPI)  # Adding the EPIs to the final solution
-    solution = ' + '.join(''.join(i) for i in final_result)
+        final_result.extend(findVariables(i) for i in essentialPrimeImplicantsList)  # Adding the EPIs to the final solution
+    
+    #ES NECESESARIO EL INDICE [0]?
+    if len(final_result) == 1:
+        if len(final_result[0]) == 0:
+            solution = '1'
+        else:
+            solution = ' + '.join(''.join(i) for i in final_result)
+    else:
+        solution = ' + '.join(''.join(i) for i in final_result)
+
+
+
+
     update_solution_label(solution)
 
 # GUI INTERFACE -----------------------------------------------
@@ -131,22 +166,22 @@ frame=customtkinter.CTkFrame(master=l1, width=750, height=486, corner_radius=15,
 frame.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
     
 l2=customtkinter.CTkLabel(master=frame, text="McCluskey simplificator",font=('Century Gothic',20))
-l2.place(relx=0.5, rely=0.16, anchor=tkinter.CENTER)
+l2.place(relx=0.5, rely=0.2, anchor=tkinter.CENTER)
     
 entry=customtkinter.CTkEntry(master=frame, width=650, placeholder_text='Enter the minterms with a space between Example: (0 2 14 8 9 3 5)')
-entry.place(relx=0.5, rely=0.27, anchor=tkinter.CENTER)
+entry.place(relx=0.5, rely=0.35, anchor=tkinter.CENTER)
     
 #Simplify Button
 
 simplify = customtkinter.CTkButton(app, text="Simplify", command=main, font=('Century Gothic',16), width=125, height=40, corner_radius=10)
-simplify.place(relx=0.5, rely=0.44, anchor=tkinter.CENTER)    
+simplify.place(relx=0.5, rely=0.51, anchor=tkinter.CENTER)    
     
 l3=customtkinter.CTkLabel(master=frame, text="Solution:",font=('Century Gothic',20))
-l3.place(relx=0.5, rely=0.55, anchor=tkinter.CENTER)
+l3.place(relx=0.5, rely=0.65, anchor=tkinter.CENTER)
     
 solution_label_text = tkinter.StringVar()    
 l4=customtkinter.CTkLabel(master=frame, textvariable=solution_label_text,font=('Century Gothic',20))
-l4.place(relx=0.5, rely=0.65, anchor=tkinter.CENTER)
+l4.place(relx=0.5, rely=0.8, anchor=tkinter.CENTER)
 
 # Run app
 app.mainloop()
