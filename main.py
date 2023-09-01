@@ -6,10 +6,18 @@ from compare import compare
 from removeTerms import removeTerms
 from findEPI import findEPI
 from multiply import multiply
+import tkinter
+import customtkinter
+from PIL import ImageTk, Image
+
+def update_solution_label(new_solution):
+    solution_label_text.set(new_solution) 
 
 def main():
-    mt = [int(i) for i in input("Enter the minterms: ").strip().split()]
-    dc = [int(i) for i in input("Enter the don't cares (If any): ").strip().split()]
+    input = entry.get()
+    organizedInput = input.strip().split()
+    mt = [int(i) for i in organizedInput]
+    dc = []
     mt.sort()
     minterms = mt
     minterms.sort()
@@ -101,10 +109,45 @@ def main():
             P.pop(0)
         final_result = [min(P[0], key=len)]  # Choosing the term with minimum variables from P
         final_result.extend(findVariables(i) for i in EPI)  # Adding the EPIs to the final solution
-    print('\n\nSolution: F = ' + ' + '.join(''.join(i) for i in final_result))
+    solution = ' + '.join(''.join(i) for i in final_result)
+    update_solution_label(solution)
 
-    input("\nPress enter to exit...")
+# GUI INTERFACE -----------------------------------------------
+# System Settings
+customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("green")
+    
+# Our app frame
+app = customtkinter.CTk()
+app.geometry("1280x720")
+app.title("McCluskey Simplification")
+    
+img1=ImageTk.PhotoImage(Image.open("./assets/pattern.png"))
+l1=customtkinter.CTkLabel(master=app,image=img1)
+l1.pack()
+    
+# Creating custom frame
+frame=customtkinter.CTkFrame(master=l1, width=750, height=486, corner_radius=15, fg_color="transparent")
+frame.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+    
+l2=customtkinter.CTkLabel(master=frame, text="McCluskey simplificator",font=('Century Gothic',20))
+l2.place(relx=0.5, rely=0.16, anchor=tkinter.CENTER)
+    
+entry=customtkinter.CTkEntry(master=frame, width=650, placeholder_text='Enter the minterms with a space between Example: (0 2 14 8 9 3 5)')
+entry.place(relx=0.5, rely=0.27, anchor=tkinter.CENTER)
+    
+#Simplify Button
 
+simplify = customtkinter.CTkButton(app, text="Simplify", command=main, font=('Century Gothic',16), width=125, height=40, corner_radius=10)
+simplify.place(relx=0.5, rely=0.44, anchor=tkinter.CENTER)    
+    
+l3=customtkinter.CTkLabel(master=frame, text="Solution:",font=('Century Gothic',20))
+l3.place(relx=0.5, rely=0.55, anchor=tkinter.CENTER)
+    
+solution_label_text = tkinter.StringVar()    
+l4=customtkinter.CTkLabel(master=frame, textvariable=solution_label_text,font=('Century Gothic',20))
+l4.place(relx=0.5, rely=0.65, anchor=tkinter.CENTER)
 
-if __name__ == "__main__":
-    main()
+# Run app
+app.mainloop()
+# GUI END ----------------------------------------------------
