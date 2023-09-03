@@ -1,5 +1,5 @@
 # My Project
-This is a program that simplifies by using McCluskey method, any logical function.
+This is a program that simplifies any boolean function by using McCluskey method, any logical function.
 
 ## Features
 - Feature Arnovii
