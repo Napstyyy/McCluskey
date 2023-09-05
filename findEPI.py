@@ -1,6 +1,8 @@
-def findEPI(x):
-    res = []
-    for i in x:
-        if len(x[i]) == 1:
-            res.append(x[i][0]) if x[i][0] not in res else None
-    return res
+def findEPI(dictionary):
+
+    List = []
+    for i in dictionary:
+        if len(dictionary[i]) == 1:   #If the length of the list contained  in the dictionary is 1, then it is an "essential prime implicant"
+            EsentialPrimeImplicant = dictionary[i][0] #The essential prime implicant is the only element in the list
+            List.append(EsentialPrimeImplicant) if EsentialPrimeImplicant not in List else None #Add the essential prime implicant to the list if it is not already in the list
+    return List
